@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="ru"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Кривые 2-го порядка — 3D</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',sans-serif;background:#0d1117;color:#e6edf3;height:100vh;display:flex;flex-direction:column;overflow:hidden}
+header{background:linear-gradient(135deg,#1a1f2e,#252d3d);padding:10px 22px;display:flex;align-items:center;gap:14px;border-bottom:1px solid #30363d;flex-shrink:0}
+header h1{font-size:1.1rem;font-weight:700;color:#58a6ff}header p{font-size:.75rem;color:#8b949e}
+.main{display:flex;flex:1;overflow:hidden}
+.left{width:330px;background:#161b22;border-right:1px solid #30363d;display:flex;flex-direction:column;overflow-y:auto;padding:14px;gap:12px}
+.stitle{font-size:.68rem;text-transform:uppercase;letter-spacing:1.5px;color:#58a6ff;margin-bottom:3px}
+.tabs{display:grid;grid-template-columns:1fr 1fr;gap:5px}
+.tab{background:#21262d;border:1px solid #30363d;color:#c9d1d9;padding:8px 5px;border-radius:8px;cursor:pointer;font-size:.78rem;text-align:center;transition:all .2s}
+.tab:hover{border-color:#58a6ff;color:#58a6ff}.tab.active{background:#1f6feb;border-color:#58a6ff;color:#fff}
+.fbox{background:#0d1117;border:1px solid #30363d;border-radius:8px;padding:10px;font-size:1rem;text-align:center;color:#f0c040;font-family:'Courier New',monospace}
+.pgrid{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.pg label{display:block;font-size:.7rem;color:#8b949e;margin-bottom:2px}
+.pg input{width:100%;background:#21262d;border:1px solid #30363d;color:#e6edf3;padding:7px 9px;border-radius:6px;font-size:.88rem;outline:none}
+.pg input:focus{border-color:#58a6ff}
+.mkbd{display:grid;grid-template-columns:repeat(4,1fr);gap:5px}
+.kb{background:#21262d;border:1px solid #30363d;color:#c9d1d9;padding:9px 4px;border-radius:6px;cursor:pointer;font-size:.82rem;text-align:center;transition:all .15s;user-select:none}
+.kb:hover{background:#2d333b;border-color:#58a6ff;color:#fff}.kb:active{background:#1f6feb}
+.kb.op{color:#f0c040}.kb.sp{color:#79c0ff;font-size:.72rem}
+.disp{background:#21262d;border:1px solid #30363d;border-radius:8px;padding:9px 11px;font-size:.95rem;color:#e6edf3;word-break:break-all;font-family:'Courier New',monospace;min-height:40px}
+.bbtn{background:linear-gradient(135deg,#1f6feb,#388bfd);border:none;color:#fff;padding:11px;border-radius:8px;cursor:pointer;font-size:.95rem;font-weight:600;width:100%}
+.bbtn:hover{opacity:.88}
+.icard{background:#0d1117;border:1px solid #30363d;border-radius:8px;padding:11px;font-size:.78rem;line-height:1.7;color:#8b949e}
+.icard strong{color:#c9d1d9;display:block;font-size:.9rem;margin-bottom:3px}
+.right{flex:1;position:relative}
+#c3d{width:100%;height:100%;display:block}
+.olbl{position:absolute;top:14px;left:14px;background:rgba(22,27,34,.88);border:1px solid #30363d;border-radius:8px;padding:7px 13px;font-size:.78rem;color:#8b949e;pointer-events:none}
+.olbl strong{color:#58a6ff;display:block;font-size:.93rem;margin-bottom:1px}
+.hint{position:absolute;bottom:14px;right:14px;background:rgba(22,27,34,.75);border:1px solid #30363d;border-radius:8px;padding:7px 11px;font-size:.7rem;color:#6e7681;pointer-events:none;line-height:1.8}
+</style></head><body>
+<header><div><h1>📐 Кривые второго порядка</h1><p>Интерактивный 3D-калькулятор для НПК</p></div></header>
+<div class="main">
+<div class="left">
+  <div><div class="stitle">Выбор кривой</div><div class="tabs">
+    <div class="tab active" data-c="ellipse">🥚 Эллипс</div>
+    <div class="tab" data-c="circle">⭕ Окружность</div>
+    <div class="tab" data-c="parabola">📈 Парабола</div>
+    <div class="tab" data-c="hyperbola">〰️ Гипербола</div>
+  </div></div>
+  <div><div class="stitle">Уравнение</div><div class="fbox" id="fbox">x²/a² + y²/b² = 1</div></div>
+  <div><div class="stitle">Параметры</div><div class="pgrid" id="pgrid">
+    <div class="pg"><label>a (полуось X)</label><input type="number" id="pa" value="3" step="0.1" min="0.1"></div>
+    <div class="pg"><label>b (полуось Y)</label><input type="number" id="pb" value="2" step="0.1" min="0.1"></div>
+  </div></div>
+  <div><div class="stitle">Математическая клавиатура</div>
+  <div class="disp" id="disp">_</div><br>
+  <div class="mkbd">
+    <div class="kb" data-v="7">7</div><div class="kb" data-v="8">8</div><div class="kb" data-v="9">9</div><div class="kb op" data-v="/">÷</div>
+    <div class="kb" data-v="4">4</div><div class="kb" data-v="5">5</div><div class="kb" data-v="6">6</div><div class="kb op" data-v="*">×</div>
+    <div class="kb" data-v="1">1</div><div class="kb" data-v="2">2</div><div class="kb" data-v="3">3</div><div class="kb op" data-v="-">−</div>
+    <div class="kb" data-v="0">0</div><div class="kb" data-v=".">.</div><div class="kb op" data-v="+">+</div><div class="kb op" data-a="=">=</div>
+    <div class="kb sp" data-a="sqrt">√x</div><div class="kb sp" data-a="sq">x²</div><div class="kb sp" data-a="frac">a/b</div><div class="kb sp" data-a="pi">π</div>
+    <div class="kb sp" data-a="clr" style="grid-column:span 2;color:#f85149">✕ Очистить</div>
+    <div class="kb sp" data-a="back" style="grid-column:span 2">⌫ Удалить</div>
+  </div></div>
+  <button class="bbtn" id="bbtn">▶ Построить фигуру</button>
+  <div class="icard" id="icard"><strong>Эллипс</strong>Уравнение: x²/a² + y²/b² = 1<br>Эксцентриситет: e = c/a &lt; 1<br>Площадь: S = π·a·b<br>Фокусы: F(±c, 0)</div>
+</div>
+<div class="right">
+  <canvas id="c3d"></canvas>
+  <div class="olbl"><strong id="cname">Эллипс</strong><span id="cpar">a=3, b=2</span></div>
+  <div class="hint">🖱 ЛКМ — вращение<br>🖱 Колёсико — масштаб<br>🖱 ПКМ — перемещение</div>
+</div></div>
+<script>
+const cv=document.getElementById('c3d');
+const ren=new THREE.WebGLRenderer({canvas:cv,antialias:true});
+ren.setPixelRatio(window.devicePixelRatio);
+const sc=new THREE.Scene();sc.background=new THREE.Color(0x0d1117);
+const cam=new THREE.PerspectiveCamera(50,1,.1,1000);
+sc.add(new THREE.AmbientLight(0xffffff,.5));
+const dl=new THREE.DirectionalLight(0x88bbff,1.2);dl.position.set(10,15,10);sc.add(dl);
+sc.add(new THREE.GridHelper(20,20,0x30363d,0x1c2128));
+function ax(v,c){return new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,0,0),v]),new THREE.LineBasicMaterial({color:c}));}
+sc.add(ax(new THREE.Vector3(8,0,0),0xff4444));sc.add(ax(new THREE.Vector3(0,8,0),0x44ff44));sc.add(ax(new THREE.Vector3(0,0,8),0x4488ff));
+let drag=false,rdrag=false,pm={x:0,y:0},sph={th:.8,ph:1,r:14},pan=new THREE.Vector3();
+cv.addEventListener('mousedown',e=>{drag=true;rdrag=e.button===2;pm={x:e.clientX,y:e.clientY};e.preventDefault();});
+cv.addEventListener('contextmenu',e=>e.preventDefault());
+window.addEventListener('mouseup',()=>drag=false);
+window.addEventListener('mousemove',e=>{if(!drag)return;const dx=(e.clientX-pm.x)*.01,dy=(e.clientY-pm.y)*.01;if(rdrag){pan.x-=dx*3;pan.y+=dy*3;}else{sph.th-=dx;sph.ph=Math.max(.1,Math.min(Math.PI-.1,sph.ph+dy));}pm={x:e.clientX,y:e.clientY};});
+cv.addEventListener('wheel',e=>{sph.r=Math.max(2,Math.min(50,sph.r+e.deltaY*.05));e.preventDefault();},{passive:false});
+function resize(){const w=cv.parentElement.clientWidth,h=cv.parentElement.clientHeight;ren.setSize(w,h);cam.aspect=w/h;cam.updateProjectionMatrix();}
+window.addEventListener('resize',resize);resize();
+function uc(){const x=sph.r*Math.sin(sph.ph)*Math.sin(sph.th),y=sph.r*Math.cos(sph.ph),z=sph.r*Math.sin(sph.ph)*Math.cos(sph.th);cam.position.set(x+pan.x,y+pan.y,z);cam.lookAt(pan.x,pan.y,0);}
+let cg=null;
+function cls(){if(cg){sc.remove(cg);cg=null;}}
+function tb(pts,col,r=.06,cl=false){const c=new THREE.CatmullRomCurve3(pts,cl);return new THREE.Mesh(new THREE.TubeGeometry(c,Math.max(pts.length*2,100),r,8,cl),new THREE.MeshPhongMaterial({color:col}));}
+function sp(pos,col,r=.13){const m=new THREE.Mesh(new THREE.SphereGeometry(r,16,16),new THREE.MeshPhongMaterial({color:col}));m.position.copy(pos);return m;}
+function ln(p1,p2,col,op=.6){return new THREE.Line(new THREE.BufferGeometry().setFromPoints([p1,p2]),new THREE.LineBasicMaterial({color:col,transparent:true,opacity:op}));}
+function bE(a,b){const g=new THREE.Group(),pts=[];for(let i=0;i<=300;i++){const t=i/300*Math.PI*2;pts.push(new THREE.Vector3(a*Math.cos(t),b*Math.sin(t),0));}g.add(tb(pts,0x58a6ff,.07,true));const sh=new THREE.Shape();sh.absellipse(0,0,a,b,0,Math.PI*2);g.add(new THREE.Mesh(new THREE.ShapeGeometry(sh),new THREE.MeshPhongMaterial({color:0x1f6feb,transparent:true,opacity:.13,side:THREE.DoubleSide})));const c=Math.sqrt(Math.abs(a*a-b*b));if(c>.01){g.add(sp(new THREE.Vector3(c,0,0),0xf0c040));g.add(sp(new THREE.Vector3(-c,0,0),0xf0c040));g.add(ln(new THREE.Vector3(c,0,0),new THREE.Vector3(0,b,0),0xf0c040));g.add(ln(new THREE.Vector3(-c,0,0),new THREE.Vector3(0,b,0),0xf0c040));}g.add(ln(new THREE.Vector3(0,0,0),new THREE.Vector3(a,0,0),0xff6e6e));g.add(ln(new THREE.Vector3(0,0,0),new THREE.Vector3(0,b,0),0x6eff9a));return g;}
+function bC(r){const g=new THREE.Group(),pts=[];for(let i=0;i<=200;i++){const t=i/200*Math.PI*2;pts.push(new THREE.Vector3(r*Math.cos(t),r*Math.sin(t),0));}g.add(tb(pts,0x79c0ff,.07,true));g.add(new THREE.Mesh(new THREE.CircleGeometry(r,64),new THREE.MeshPhongMaterial({color:0x1f6feb,transparent:true,opacity:.16,side:THREE.DoubleSide})));g.add(sp(new THREE.Vector3(0,0,0),0xf0c040,.12));g.add(ln(new THREE.Vector3(0,0,0),new THREE.Vector3(r,0,0),0xf0c040));return g;}
+function bP(p){const g=new THREE.Group(),pts=[];for(let t=-5;t<=5;t+=.04)pts.push(new THREE.Vector3(t*t/(2*p),t,0));g.add(tb(pts,0xf0c040,.06));g.add(sp(new THREE.Vector3(p/2,0,0),0xff6e6e));g.add(ln(new THREE.Vector3(-p/2,-6,0),new THREE.Vector3(-p/2,6,0),0xff6e6e));return g;}
+function bH(a,b){const g=new THREE.Group(),p1=[],p2=[];for(let t=-2.8;t<=2.8;t+=.03){p1.push(new THREE.Vector3(a*Math.cosh(t),b*Math.sinh(t),0));p2.push(new THREE.Vector3(-a*Math.cosh(t),b*Math.sinh(t),0));}g.add(tb(p1,0xa5d6ff,.06));g.add(tb(p2,0xa5d6ff,.06));const am=new THREE.LineBasicMaterial({color:0x8b949e,transparent:true,opacity:.4});g.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(-8,-8*b/a,0),new THREE.Vector3(8,8*b/a,0)]),am));g.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(-8,8*b/a,0),new THREE.Vector3(8,-8*b/a,0)]),am));const c=Math.sqrt(a*a+b*b);g.add(sp(new THREE.Vector3(c,0,0),0xf0c040));g.add(sp(new THREE.Vector3(-c,0,0),0xf0c040));return g;}
+let cur='ellipse';
+const FM={ellipse:'x²/a² + y²/b² = 1',circle:'x² + y² = r²',parabola:'y² = 2px',hyperbola:'x²/a² − y²/b² = 1'};
+const NF={ellipse:'<strong>Эллипс</strong>x²/a²+y²/b²=1<br>Эксцентриситет: e=c/a&lt;1<br>Площадь: S=π·a·b<br>Фокусы: (±c,0), c=√(a²−b²)',circle:'<strong>Окружность</strong>x²+y²=r²<br>Частный случай эллипса (a=b=r)<br>Длина: C=2πr, Площадь: S=πr²',parabola:'<strong>Парабола</strong>y²=2px<br>Фокус: F(p/2,0)<br>Директриса: x=−p/2<br>Эксцентриситет: e=1',hyperbola:'<strong>Гипербола</strong>x²/a²−y²/b²=1<br>Эксцентриситет: e=c/a&gt;1<br>Асимптоты: y=±(b/a)x<br>Фокусы: (±c,0)'};
+const PD={ellipse:[{id:'a',l:'a (полуось X)',v:3},{id:'b',l:'b (полуось Y)',v:2}],circle:[{id:'r',l:'r (радиус)',v:3}],parabola:[{id:'p',l:'p (параметр)',v:2}],hyperbola:[{id:'a',l:'a (веществ.)',v:3},{id:'b',l:'b (мнимая)',v:2}]};
+const NN={ellipse:'Эллипс',circle:'Окружность',parabola:'Парабола',hyperbola:'Гипербола'};
+function setC(c){cur=c;document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.c===c));document.getElementById('fbox').textContent=FM[c];document.getElementById('icard').innerHTML=NF[c];const pg=document.getElementById('pgrid');pg.innerHTML='';PD[c].forEach(p=>{const d=document.createElement('div');d.className='pg';d.innerHTML='<label>'+p.l+'</label><input type="number" id="p'+p.id+'" value="'+p.v+'" step="0.1" min="0.1">';pg.appendChild(d);});bld();}
+function gp(){const r={};PD[cur].forEach(p=>{const e=document.getElementById('p'+p.id);r[p.id]=e?parseFloat(e.value)||p.v:p.v;});return r;}
+function bld(){cls();const p=gp();const fn={ellipse:()=>bE(p.a,p.b),circle:()=>bC(p.r),parabola:()=>bP(p.p),hyperbola:()=>bH(p.a,p.b)};cg=fn[cur]();sc.add(cg);document.getElementById('cname').textContent=NN[cur];document.getElementById('cpar').textContent=Object.entries(p).map(([k,v])=>k+'='+v).join(', ');}
+document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>setC(t.dataset.c)));
+document.getElementById('bbtn').addEventListener('click',bld);
+let kx='';
+function ud(){document.getElementById('disp').textContent=kx||'_';}
+document.querySelector('.mkbd').addEventListener('click',e=>{const b=e.target.closest('.kb');if(!b)return;const v=b.dataset.v,a=b.dataset.a;if(v!==undefined){kx+=v==='/'?'÷':v==='*'?'×':v;ud();return;}if(a==='clr'){kx='';ud();return;}if(a==='back'){kx=kx.slice(0,-1);ud();return;}if(a==='sqrt'){kx='√('+kx+')';ud();return;}if(a==='sq'){kx='('+kx+')²';ud();return;}if(a==='frac'){kx='('+kx+')/';ud();return;}if(a==='pi'){kx+='π';ud();return;}if(a==='='){try{let ex=kx.replace(/÷/g,'/').replace(/×/g,'*').replace(/π/g,String(Math.PI)).replace(/²/g,'**2').replace(/√\(/g,'Math.sqrt(');kx=String(Math.round(Function('"use strict";return('+ex+')')() *1e4)/1e4);}catch{kx='Ошибка';}ud();}});
+function anim(){requestAnimationFrame(anim);uc();ren.render(sc,cam);}
+bld();anim();
+</script></body></html>
